@@ -18,7 +18,17 @@ self.addEventListener('fetch', (event) => {
         caches.match(event.request).then((response) => {
             if (response) return response;
 
-            return fetch(event.request);
+            const promise = fetch(event.request).then((response) => {
+                if (response.status !== 200) return response;
+
+                const cachedResponse = response.clone();
+                caches.open('meu-cache-v1').then((cache) => {
+                    cache.put(event.request, cachedResponse);
+                });
+                return response;
+            });
+
+            return promise;
         })
     );
 });
